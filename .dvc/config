@@ -1,0 +1,4 @@
+[core]
+    remote = myawss3
+['remote "myawss3"']
+    url = s3://detect128/barcode_dataset/
