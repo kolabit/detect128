@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import os
+# import os
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -93,7 +93,12 @@ class ExtraTensorBoardLogger:
         # Also merge trainer.metrics if it contains val/ keys
         if hasattr(trainer, "metrics") and isinstance(trainer.metrics, dict):
             for k, v in trainer.metrics.items():
-                if "val" in k.lower() or "map" in k.lower() or "precision" in k.lower() or "recall" in k.lower():
+                if (
+                    "val" in k.lower()
+                    or "map" in k.lower()
+                    or "precision" in k.lower()
+                    or "recall" in k.lower()
+                ):
                     val_metrics[k] = v
 
         for k, v in val_metrics.items():
@@ -179,4 +184,3 @@ def main(cfg: DictConfig) -> None:
 
 if __name__ == "__main__":
     main()
-

@@ -7,4 +7,3 @@ val: val # val images (relative to 'path') 23 images
 # Classes
 names:
   0: barcode
-

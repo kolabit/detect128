@@ -27,4 +27,3 @@ logging:
   # Extra TensorBoard logging (in addition to Ultralytics' own TB logs)
   extra_tensorboard: true
   extra_tb_subdir: "extra_tb"
-
