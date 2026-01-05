@@ -1,0 +1,30 @@
+# conf/config.yaml
+defaults: []
+
+train:
+  model: "yolov8s.pt"     # or path to a local checkpoint
+  data: "data.yaml"       # your dataset yaml (COCO/YOLO format)
+  epochs: 10
+  imgsz: 640
+  batch: 16
+  device: 0               # 0,1,... or "cpu"
+  workers: 8
+  optimizer: "auto"       # or "SGD", "AdamW"
+  lr0: 0.01
+  lrf: 0.01
+  weight_decay: 0.0005
+  patience: 50
+  seed: 0
+  pretrained: true
+
+logging:
+  # Ultralytics uses TensorBoard by default and will write following file:
+  # runs/<project>/<name>/events.out.tfevents...
+  project: "runs"
+  name: "yolov8s_custom"
+  exist_ok: false
+
+  # Extra TensorBoard logging (in addition to Ultralytics' own TB logs)
+  extra_tensorboard: true
+  extra_tb_subdir: "extra_tb"
+
