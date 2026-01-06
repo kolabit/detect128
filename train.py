@@ -5,9 +5,33 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 import hydra
+import subprocess
+import time
+import webbrowser
 from omegaconf import DictConfig, OmegaConf
 
 from ultralytics import YOLO
+
+RUNS_DIR = "runs"  # default filder for logging
+TB_PORT = 6006
+
+
+def start_tensorboard(logdir=RUNS_DIR, port=TB_PORT):
+    # Start TensorBoard in background
+    tb_proc = subprocess.Popen(
+        ["tensorboard", f"--logdir={logdir}", f"--port={port}", "--bind_all"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+    # Give TensorBoard time to start
+    time.sleep(2)
+
+    # Open browser
+    webbrowser.open(f"http://localhost:{port}")
+
+    return tb_proc
+
 
 # Optional extra TB logging
 try:
@@ -110,7 +134,7 @@ class ExtraTensorBoardLogger:
         self.writer.flush()
 
 
-@hydra.main(version_base=None, config_path="conf", config_name="config")
+@hydra.main(version_base=None, config_path="conf", config_name="train_cfg")
 def main(cfg: DictConfig) -> None:
     print("Hydra config:\n", OmegaConf.to_yaml(cfg))
 
@@ -170,10 +194,13 @@ def main(cfg: DictConfig) -> None:
         callbacks_added = True
 
     try:
+        tb_process = start_tensorboard()
         results = model.train(**train_args)
         # results is a Ultralytics Results object for final val (varies)
         print("Training completed.")
         print(results)
+        input("Press Enter to close Tensorboard GUI")
+        tb_process.terminate()
     finally:
         if extra_logger is not None:
             extra_logger.close()
