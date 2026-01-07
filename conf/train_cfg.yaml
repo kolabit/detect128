@@ -8,13 +8,13 @@ train:
   imgsz: 640
   batch: 16
   device: 0               # 0,1,... or "cpu"
-  workers: 8
+  workers: 16
   optimizer: "auto"       # or "SGD", "AdamW"
   lr0: 0.01
   lrf: 0.01
   weight_decay: 0.0005
   patience: 50
-  seed: 0
+  seed: 1242
   pretrained: true
 
 logging:

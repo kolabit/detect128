@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-# import os
+import os
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -9,12 +9,39 @@ import subprocess
 import time
 import webbrowser
 from omegaconf import DictConfig, OmegaConf
-
+#import getpass!!!
 from ultralytics import YOLO
 
 RUNS_DIR = "runs"  # default filder for logging
 TB_PORT = 6006
 
+
+def data_load():
+    """
+    Prompt for AWS credentials (if not provided), set them in env,
+    and run `dvc pull` in the given project directory.
+
+    Credentials are only set for the subprocess, not globally.
+    """
+    # Ask AWS Access Key ID
+    aws_access_key_id = "AKIAWXZSCPTRZPABNF5X" #input("AWS Access Key ID: ").strip()
+    # AWS Secret Access Key:
+    aws_secret_access_key = input("AWS Secret Access Key for KeyID=AKIAWXZSCPTRZPABNF5X: ").strip()
+    #!!! aws_secret_access_key = getpass.getpass("AWS Secret Access Key: ").strip() !!!
+    if not aws_access_key_id or not aws_secret_access_key:
+        raise ValueError("AWS credentials must not be empty")
+
+    env = os.environ.copy()
+    env["AWS_ACCESS_KEY_ID"] = aws_access_key_id
+    env["AWS_SECRET_ACCESS_KEY"] = aws_secret_access_key
+
+    return subprocess.run(
+        ["dvc", "pull"],
+        cwd=str("."), #cwd=str("../")
+        env=env,
+        text=True,
+        capture_output=True,
+       )
 
 def start_tensorboard(logdir=RUNS_DIR, port=TB_PORT):
     # Start TensorBoard in background
@@ -24,11 +51,11 @@ def start_tensorboard(logdir=RUNS_DIR, port=TB_PORT):
         stderr=subprocess.DEVNULL,
     )
 
-    # Give TensorBoard time to start
-    time.sleep(2)
+    # Sleep to give TensorBoard time to start
+    time.sleep(3)
 
     # Open browser
-    webbrowser.open(f"http://localhost:{port}")
+    webbrowser.open(f"http://localhost:{port}/#timeseries")
 
     return tb_proc
 
@@ -136,6 +163,15 @@ class ExtraTensorBoardLogger:
 
 @hydra.main(version_base=None, config_path="conf", config_name="train_cfg")
 def main(cfg: DictConfig) -> None:
+    
+    print("Load the dataset from AWS S3\n")
+    dl_res = data_load()
+    print(dl_res.stdout)
+    print(dl_res.stderr)
+    if dl_res.returncode != 0:
+        print("Dataset load failed\n")
+        return
+
     print("Hydra config:\n", OmegaConf.to_yaml(cfg))
 
     # Resolve paths relative to original working directory (Hydra changes cwd)
