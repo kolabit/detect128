@@ -1,6 +1,4 @@
 [core]
-    remote = dataremote
-['remote "myawss3"']
-    url = s3://detect128/barcode_dataset/
-['remote "dataremote"']
-    url = s3://detect128/data128
+    remote = origin
+['remote "origin"']
+    url = s3://detect128/data128/
