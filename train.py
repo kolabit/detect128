@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import shutil
 from typing import Any, Dict, Optional
 
 import hydra
@@ -9,7 +10,8 @@ import subprocess
 import time
 import webbrowser
 from omegaconf import DictConfig, OmegaConf
-#import getpass!!!
+
+# import getpass!!!
 from ultralytics import YOLO
 
 RUNS_DIR = "runs"  # default filder for logging
@@ -24,9 +26,11 @@ def data_load():
     Credentials are only set for the subprocess, not globally.
     """
     # Ask AWS Access Key ID
-    aws_access_key_id = "AKIAWXZSCPTRZPABNF5X" #input("AWS Access Key ID: ").strip()
+    aws_access_key_id = "AKIAWXZSCPTRZPABNF5X"  # input("AWS Access Key ID: ").strip()
     # AWS Secret Access Key:
-    aws_secret_access_key = input("AWS Secret Access Key for KeyID=AKIAWXZSCPTRZPABNF5X: ").strip()
+    aws_secret_access_key = input(
+        "AWS Secret Access Key for KeyID=AKIAWXZSCPTRZPABNF5X: "
+    ).strip()
     #!!! aws_secret_access_key = getpass.getpass("AWS Secret Access Key: ").strip() !!!
     if not aws_access_key_id or not aws_secret_access_key:
         raise ValueError("AWS credentials must not be empty")
@@ -37,11 +41,12 @@ def data_load():
 
     return subprocess.run(
         ["dvc", "pull"],
-        cwd=str("."), #cwd=str("../")
+        cwd=str("."),  # cwd=os.getcwd(),
         env=env,
         text=True,
-        capture_output=True,
-       )
+        # capture_output=True,
+    )
+
 
 def start_tensorboard(logdir=RUNS_DIR, port=TB_PORT):
     # Start TensorBoard in background
@@ -82,13 +87,13 @@ class ExtraTensorBoardLogger:
     Adds extra TensorBoard scalars using Ultralytics callbacks.
 
     Ultralytics already writes TensorBoard event files.
-    This logger is useful when you want custom tags or additional metrics.
+    This logger is for additional metrics.
     """
 
     def __init__(self, log_dir: Path):
         if SummaryWriter is None:
             raise RuntimeError(
-                "tensorboard SummaryWriter not available. "
+                "Tensorboard SummaryWriter is not available. "
                 "Install with: uv add tensorboard (and ensure torch is installed)."
             )
         self.writer = SummaryWriter(log_dir=str(log_dir))
@@ -98,11 +103,11 @@ class ExtraTensorBoardLogger:
         self.writer.close()
 
     def on_train_epoch_end(self, trainer) -> None:
-        # trainer.metrics typically includes training loss components in recent Ultralytics versions
+        # For Training metrics logging!
         # We'll log whatever we can find.
         epoch = getattr(trainer, "epoch", None)
         if epoch is None:
-            return
+            return  # SHould never happen
 
         metrics: Dict[str, Any] = {}
         # Try multiple known locations because Ultralytics internals can vary slightly by version
@@ -123,7 +128,7 @@ class ExtraTensorBoardLogger:
         self.writer.flush()
 
     def on_fit_epoch_end(self, trainer) -> None:
-        # Validation metrics may be present in trainer.metrics or trainer.validator.metrics
+        # For Validation metrics logging
         epoch = getattr(trainer, "epoch", None)
         if epoch is None:
             return
@@ -132,7 +137,7 @@ class ExtraTensorBoardLogger:
 
         if hasattr(trainer, "validator") and trainer.validator is not None:
             vm = getattr(trainer.validator, "metrics", None)
-            # vm can be a dict-like or custom object. Try dict first.
+            # Val metrics can be a dict-like or custom object. Try dict first.
             if isinstance(vm, dict):
                 val_metrics.update(vm)
             else:
@@ -163,11 +168,10 @@ class ExtraTensorBoardLogger:
 
 @hydra.main(version_base=None, config_path="conf", config_name="train_cfg")
 def main(cfg: DictConfig) -> None:
-    
     print("Load the dataset from AWS S3\n")
     dl_res = data_load()
-    print(dl_res.stdout)
-    print(dl_res.stderr)
+    # print(dl_res.stdout)
+    # print(dl_res.stderr)
     if dl_res.returncode != 0:
         print("Dataset load failed\n")
         return
@@ -177,12 +181,15 @@ def main(cfg: DictConfig) -> None:
     # Resolve paths relative to original working directory (Hydra changes cwd)
     orig_cwd = Path(hydra.utils.get_original_cwd())
     data_yaml = (orig_cwd / cfg.train.data).resolve()
-    model_name_or_path = cfg.train.model  # can be built-in weights name or local path
+    model_name_or_path = cfg.train.model  # base model name
 
     # Ultralytics output directory:
     # runs/<project>/<name>/
     project_dir = (orig_cwd / cfg.logging.project).resolve()
     run_name = str(cfg.logging.name)
+    # print ("Run name: ", run_name)
+    # print ("Project: ", project_dir)
+    # exit (0)
 
     # Create YOLO model
     model = YOLO(model_name_or_path)
@@ -223,20 +230,28 @@ def main(cfg: DictConfig) -> None:
 
         # Add callbacks to Ultralytics trainer lifecycle
         # These callback names are supported by Ultralytics' callback system.
-        # If you are on an older/newer version and a hook name differs,
-        # you can adjust to the ones printed by model.callbacks keys.
+        # In spite of similar names they have different meaning:
+        # - on_train_epoch_end - used for Train metrics only
         model.add_callback("on_train_epoch_end", extra_logger.on_train_epoch_end)
+        # - on_fit_epoch_end - used for Validation metrics
         model.add_callback("on_fit_epoch_end", extra_logger.on_fit_epoch_end)
         callbacks_added = True
 
     try:
         tb_process = start_tensorboard()
         results = model.train(**train_args)
-        # results is a Ultralytics Results object for final val (varies)
-        print("Training completed.")
+        # Results is a Ultralytics Results object
+        print("Training completed. See results below:")
         print(results)
-        input("Press Enter to close Tensorboard GUI")
+        input("Press Enter to stop Tensorboard server")
         tb_process.terminate()
+        # Copy best model to "vault"
+        res_dir = Path(results.save_dir)
+        best_src = res_dir / "weights" / "best.pt"
+        best_dst = orig_cwd / "data" / "model" / "detect128.pt"
+        print("Copy the best model: ", best_dst)
+        shutil.copy(best_src, best_dst)
+
     finally:
         if extra_logger is not None:
             extra_logger.close()
