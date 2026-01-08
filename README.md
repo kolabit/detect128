@@ -69,9 +69,9 @@ https://www.microchip.com/en-us/development-tool/mpfs250-video-kit
 
 ## Pre-requisites
 
-Project was tested on Ubuntu 20.04, 22.04, 24.04 with NVidia CUDA 12.4.
-To run **Triton Inference Server**, you need to have **docker** installed,
-and **NVIDIA Container Toolkit**. Please see:
+Project was tested on Ubuntu 20.04, 22.04, 24.04 with NVidia CUDA 12.4. To run
+**Triton Inference Server**, you need to have **docker** installed, and **NVIDIA
+Container Toolkit**. Please see:
 https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
 
 ## Installation steps
@@ -101,7 +101,6 @@ source .venv/bin/activate
 ```
 ./vbxsdk_download.sh
 ```
-
 
 # Training
 
@@ -160,12 +159,12 @@ hardware.
 
 # Inference
 
-For inference demonstration purposes **Triton Inference Server** is used.
-To run **Triton Inference Server**, and **Ultralytics Triton Client**,
-run following commands
+For inference demonstration purposes **Triton Inference Server** is used. To run
+**Triton Inference Server**, and **Ultralytics Triton Client**, run following
+commands
+
 ```
 python triton_repo.py
-sudo ./run_triton.sh 
+sudo ./run_triton.sh
 python triton_client.py
 ```
-
