@@ -7,7 +7,7 @@ train:
   epochs: 5
   imgsz: 640
   batch: 16
-  device: 0               # 0,1,... or "cpu"
+  device: 0 # 0,1,... or "cpu"
   workers: 32
   optimizer: "auto" # or "SGD", "AdamW"
   lr0: 0.01
