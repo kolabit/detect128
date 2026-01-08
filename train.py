@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 import shutil
-from typing import Any, Dict, Optional
-
-import hydra
 import subprocess
 import time
 import webbrowser
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+import hydra
 from omegaconf import DictConfig, OmegaConf
 
 # import getpass!!!
@@ -26,12 +26,12 @@ def data_load():
     Credentials are only set for the subprocess, not globally.
     """
     # Ask AWS Access Key ID
-    aws_access_key_id = "AKIAWXZSCPTRZPABNF5X"  # input("AWS Access Key ID: ").strip()
+    aws_access_key_id = "AKIAWXZSCPTRZPABNF5X"  # input("AWS Access Key ID: ")
     # AWS Secret Access Key:
     aws_secret_access_key = input(
         "AWS Secret Access Key for KeyID=AKIAWXZSCPTRZPABNF5X: "
     ).strip()
-    #!!! aws_secret_access_key = getpass.getpass("AWS Secret Access Key: ").strip() !!!
+    # !!! aws_secret_access_key=getpass.getpass("AWS Secret Access Key:")
     if not aws_access_key_id or not aws_secret_access_key:
         raise ValueError("AWS credentials must not be empty")
 
@@ -94,7 +94,7 @@ class ExtraTensorBoardLogger:
         if SummaryWriter is None:
             raise RuntimeError(
                 "Tensorboard SummaryWriter is not available. "
-                "Install with: uv add tensorboard (and ensure torch is installed)."
+                "Install with: uv add tensorboard if needed!"
             )
         self.writer = SummaryWriter(log_dir=str(log_dir))
 
@@ -110,7 +110,7 @@ class ExtraTensorBoardLogger:
             return  # SHould never happen
 
         metrics: Dict[str, Any] = {}
-        # Try multiple known locations because Ultralytics internals can vary slightly by version
+        # Try multiple known locations because internals can vary by version
         if hasattr(trainer, "metrics") and isinstance(trainer.metrics, dict):
             metrics.update(trainer.metrics)
         if hasattr(trainer, "tloss"):
@@ -194,7 +194,7 @@ def main(cfg: DictConfig) -> None:
     # Create YOLO model
     model = YOLO(model_name_or_path)
 
-    extra_logger: Optional[ExtraTensorBoardLogger] = None
+    ext_lgr: Optional[ExtraTensorBoardLogger] = None
     callbacks_added = False
 
     # Train arguments (Ultralytics)
@@ -215,7 +215,7 @@ def main(cfg: DictConfig) -> None:
         project=str(project_dir),
         name=run_name,
         exist_ok=bool(cfg.logging.exist_ok),
-        # TensorBoard logs are produced automatically by Ultralytics in the run dir.
+        # TensorBoard logs produced automatically by Ultralytics in run dir
         # You can also add verbose=True/False as needed:
         verbose=True,
     )
@@ -224,17 +224,17 @@ def main(cfg: DictConfig) -> None:
     if bool(cfg.logging.extra_tensorboard):
         # Put extra TB logs inside the same run folder for convenience:
         # runs/<project>/<name>/<extra_tb_subdir>/
-        extra_tb_dir = project_dir / run_name / str(cfg.logging.extra_tb_subdir)
-        extra_tb_dir.mkdir(parents=True, exist_ok=True)
-        extra_logger = ExtraTensorBoardLogger(log_dir=extra_tb_dir)
+        ext_tb_dir=project_dir / run_name / str(cfg.logging.extra_tb_subdir)
+        ext_tb_dir.mkdir(parents=True, exist_ok=True)
+        ext_lgr = ExtraTensorBoardLogger(log_dir=ext_tb_dir)
 
         # Add callbacks to Ultralytics trainer lifecycle
         # These callback names are supported by Ultralytics' callback system.
         # In spite of similar names they have different meaning:
         # - on_train_epoch_end - used for Train metrics only
-        model.add_callback("on_train_epoch_end", extra_logger.on_train_epoch_end)
+        model.add_callback("on_train_epoch_end", ext_lgr.on_train_epoch_end)
         # - on_fit_epoch_end - used for Validation metrics
-        model.add_callback("on_fit_epoch_end", extra_logger.on_fit_epoch_end)
+        model.add_callback("on_fit_epoch_end", ext_lgr.on_fit_epoch_end)
         callbacks_added = True
 
     try:
@@ -253,10 +253,10 @@ def main(cfg: DictConfig) -> None:
         shutil.copy(best_src, best_dst)
 
     finally:
-        if extra_logger is not None:
-            extra_logger.close()
+        if ext_lgr is not None:
+            ext_lgr.close()
         if callbacks_added:
-            # Not strictly necessary; keeps state clean if you reuse the model object
+            # Not necessary, just keeps state clean if you reuse model object
             pass
 
 

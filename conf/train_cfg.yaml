@@ -2,14 +2,10 @@
 defaults: []
 
 train:
-  model: "yolov8s.pt"     # or path to a local checkpoint
-  data: "conf/data.yaml"   # your dataset yaml (COCO/YOLO format)
+  model: "yolov8s.pt" # or path to a local checkpoint
+  data: "conf/data.yaml" # your dataset yaml (COCO/YOLO format)
   epochs: 30
-  imgsz: 640
-  batch: 16
-  device: 0               # 0,1,... or "cpu"
-  workers: 32
-  optimizer: "auto"       # or "SGD", "AdamW"
+  optimizer: "auto" # or "SGD", "AdamW"
   lr0: 0.01
   lrf: 0.01
   weight_decay: 0.0005

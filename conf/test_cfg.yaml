@@ -1,0 +1,23 @@
+weights: data/model/detect128.pt
+data: conf/data.yaml
+split: test
+
+device: 0
+imgsz: 640
+batch: 16
+conf: 0.001
+iou: 0.7
+max_det: 300
+
+project: runs/eval
+name: test_2
+exist_ok: true
+
+plots: true
+save_json: false
+
+extra:
+  workers: 16
+
+print_config: false
+
