@@ -1,4 +1,4 @@
-# INTRODUCTION
+# Introduction
 
 The point of **detect128** project is create CNN model to detect the 1D barcodes
 of type “Code 128”. Model should run on VectorBlox IP-core, running on Microchip
@@ -65,11 +65,14 @@ on PolarFire FPGA with RISC-V CPU and VectorBlox SDK. For example
 MPFS250-Video-Kit can be used:
 https://www.microchip.com/en-us/development-tool/mpfs250-video-kit
 
-# SETUP
+# Setup
 
 ## Pre-requisites
 
 Project was tested on Ubuntu 20.04, 22.04, 24.04 with NVidia CUDA 12.4.
+To run **Triton Inference Server**, you need to have **docker** installed,
+and **NVIDIA Container Toolkit**. Please see:
+https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html
 
 ## Installation steps
 
@@ -99,7 +102,8 @@ source .venv/bin/activate
 ./vbxsdk_download.sh
 ```
 
-# TRAINING
+
+# Training
 
 To start the training, run _train.py_ script:
 
@@ -124,7 +128,7 @@ automatically with Tensorboard GUI.
 
 After the finish, the best model will be copied to _data/model_ folder
 
-# TESTING
+# Evaluation
 
 For evaluation purposes, you can run model testing with _test.py_ script:
 
@@ -141,7 +145,7 @@ welcome to modify _Hydra_ config YAML with test parameters here:
 conf/test_cfg.yaml
 ```
 
-# PRODUCTION PREPARATION
+# Production preparation
 
 For production, we need VNNX file (internal VectorBlox IP-core format, based on
 ONNX). To create VNNX, run convertion script:
@@ -153,3 +157,15 @@ ONNX). To create VNNX, run convertion script:
 Download VNNX model file to MPFS250-Video-Kit, use
 _VectorBlox-SDK/example/soc-video-c_ example to test on the PolarFire SoC
 hardware.
+
+# Inference
+
+For inference demonstration purposes **Triton Inference Server** is used.
+To run **Triton Inference Server**, and **Ultralytics Triton Client**,
+run following commands
+```
+python triton_repo.py
+sudo ./run_triton.sh 
+python triton_client.py
+```
+
