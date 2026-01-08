@@ -40,7 +40,7 @@ def data_load():
     env["AWS_SECRET_ACCESS_KEY"] = aws_secret_access_key
 
     return subprocess.run(
-        ["dvc", "pull"],
+        ["dvc", "pull", "--force"],
         cwd=str("."),  # cwd=os.getcwd(),
         env=env,
         text=True,
@@ -224,7 +224,7 @@ def main(cfg: DictConfig) -> None:
     if bool(cfg.logging.extra_tensorboard):
         # Put extra TB logs inside the same run folder for convenience:
         # runs/<project>/<name>/<extra_tb_subdir>/
-        ext_tb_dir=project_dir / run_name / str(cfg.logging.extra_tb_subdir)
+        ext_tb_dir = project_dir / run_name / str(cfg.logging.extra_tb_subdir)
         ext_tb_dir.mkdir(parents=True, exist_ok=True)
         ext_lgr = ExtraTensorBoardLogger(log_dir=ext_tb_dir)
 
