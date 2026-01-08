@@ -40,7 +40,7 @@ fi
 
 if [ -f detect128.vnnx ]; then
     echo "Running Simulation..."
-    python $VBX_SDK/example/python/yoloInfer.py detect128.vnnx $PRJ_DIR/data/dataset/images/test/barcode_detector_test_025565.jpg -v 8 -l $PRJ_DIR/data/dataset/barcode.names
+    python $VBX_SDK/example/python/yoloInfer.py detect128.vnnx $PRJ_DIR/data/dataset/images/test/barcode_detector_test_025565.jpg -v 8 -l $PRJ_DIR/data/detect128.txt
 fi
 
 deactivate
