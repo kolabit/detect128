@@ -11,12 +11,6 @@ repos:
       - id: check-case-conflict
       - id: mixed-line-ending
 
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.8
-    hooks:
-      - id: ruff
-      - id: ruff-format
-
   # As required by design requirements
   - repo: https://github.com/psf/black
     rev: 24.10.0

@@ -20,4 +20,3 @@ extra:
   workers: 16
 
 print_config: false
-
