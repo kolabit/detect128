@@ -21,15 +21,14 @@ def coco_to_yolo(
 
     # COCO category ids can be non-contiguous; map them to 0..N-1
     # categories = sorted(data.get("categories", []), key=lambda c: c["id"])
-    # cat_id_to_yolo = {c["id"]: i for i, c in enumerate(categories)}
-    # yolo_to_name = {i: c.get("name", str(c["id"])) for c["id"], i in cat_id_to_yolo.items()}
+    # cat_id2yolo = {c["id"]: i for i, c in enumerate(categories)}
 
     categories = sorted(data.get("categories", []), key=lambda c: c["id"])
 
-    cat_id_to_yolo = {c["id"]: i for i, c in enumerate(categories)}
+    cat_id2yolo = {c["id"]: i for i, c in enumerate(categories)}
 
     yolo_to_name = {
-        cat_id_to_yolo[c["id"]]: c.get("name", str(c["id"])) for c in categories
+        cat_id2yolo[c["id"]]: c.get("name", str(c["id"])) for c in categories
     }
 
     images = {img["id"]: img for img in data.get("images", [])}
@@ -68,7 +67,7 @@ def coco_to_yolo(
         lines = []
         for ann in anns:
             cat_id = ann["category_id"]
-            if cat_id not in cat_id_to_yolo:
+            if cat_id not in cat_id2yolo:
                 continue
 
             x, y, bw, bh = ann[
@@ -90,7 +89,7 @@ def coco_to_yolo(
             if wn <= 0 or hn <= 0:
                 continue
 
-            cls = cat_id_to_yolo[cat_id]
+            cls = cat_id2yolo[cat_id]
             lines.append(f"{cls} {xc:.6f} {yc:.6f} {wn:.6f} {hn:.6f}")
 
         label_path.write_text(
@@ -102,7 +101,7 @@ def coco_to_yolo(
         "num_images": len(images),
         "num_written": written,
         "num_empty": empty,
-        "cat_id_to_yolo": cat_id_to_yolo,
+        "cat_id2yolo": cat_id2yolo,
         "yolo_to_name": yolo_to_name,
     }
 
